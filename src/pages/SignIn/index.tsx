@@ -4,7 +4,8 @@ import { Form } from '@unform/web';
 import { FormHandles } from '@unform/core';
 import * as Yup from 'yup';
 
-import { useAuth } from '../../hooks/AuthContext';
+import { useAuth } from '../../hooks/Auth';
+import { useToast } from '../../hooks/Toast';
 import getValidationErrors from '../../utils/getValidationErrors';
 
 import { Container, Content, Background } from './styles';
@@ -21,6 +22,7 @@ const SignIn: React.FC = () => {
   const formRef = useRef<FormHandles>(null);
 
   const { signIn } = useAuth();
+  const { addToast } = useToast();
 
   const handleSubmit = useCallback(
     async (data: SignInFormData) => {
@@ -36,7 +38,7 @@ const SignIn: React.FC = () => {
 
         await schema.validate(data, { abortEarly: false });
 
-        signIn({
+        await signIn({
           email: data.email,
           password: data.password,
         });
@@ -46,9 +48,14 @@ const SignIn: React.FC = () => {
 
           formRef.current?.setErrors(errors);
         }
+        addToast({
+          type: 'error',
+          title: 'Authentication Error',
+          description: 'Login error, double check the credentials.',
+        });
       }
     },
-    [signIn],
+    [signIn, addToast],
   );
 
   return (
@@ -61,7 +68,12 @@ const SignIn: React.FC = () => {
 
           <Input icon={FiMail} name="email" placeholder="Email" />
 
-          <Input icon={FiLock} name="password" placeholder="Password" />
+          <Input
+            icon={FiLock}
+            type="password"
+            name="password"
+            placeholder="Password"
+          />
 
           <Button type="submit">Sign In</Button>
 
